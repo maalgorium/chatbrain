@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "chatbrain"
+version = "0.1.0"
+description = "Chatbot that evalutates questions and answers before answering using another instance"
+authors = ["David Brandon"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+openai = "^0.27.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

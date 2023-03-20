@@ -6,7 +6,8 @@ This is an example model where ChatGPT evaluates its own output
 and decides if it passes whatever tests the user asks for, then
 modifies its own output. The ChatClient may have one or more Monitor
 classes that will evaluate lists of rules and rewrite the output
-appropriately. For example:
+appropriately. For example, here the model has been told to avoid
+talking about, "Anything involving birds":
 
 Talk to me> What are some things that can fly?
 Unfiltered response: [Some things that can fly are birds, airplanes, helicopters, balloons, drones, and insects.]

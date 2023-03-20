@@ -9,6 +9,7 @@ classes that will evaluate lists of rules and rewrite the output
 appropriately. For example, here the model has been told to avoid
 talking about, "Anything involving birds":
 
+```
 Talk to me> What are some things that can fly?
 Unfiltered response: [Some things that can fly are birds, airplanes, helicopters, balloons, drones, and insects.]
 
@@ -33,6 +34,7 @@ Unfiltered response: [A bird is a warm-blooded, egg-laying vertebrate animal tha
 Birds are a part of the animal kingdom and have unique physical characteristics that allow them to thrive in different environments. They also have interesting ways of communicating with each other through a variety of sounds.
 
 Talk to me>
+```
 
 Just as in a human, lots of things bubble up from the subconscious of
 an LLM. LLMs literally have no filter. All we need to do is add one.

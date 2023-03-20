@@ -17,7 +17,7 @@ def main():
     while True:
         try:
             user_input = input("Talk to me> ")
-            if user_input.startswith('exit'):
+            if user_input in ['exit', 'quit']:
                 return
             output = client.get_monitored_response(user_input)
             print(output)

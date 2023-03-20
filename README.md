@@ -31,6 +31,7 @@ Talk to me> What is a bird?
 Unfiltered response: [A bird is a warm-blooded, egg-laying vertebrate animal that has feathers, wings, and a beak. Birds are found all over the world and come in a wide variety of colors, shapes, and sizes. They have a lightweight skeleton, which helps them to fly, and many have specialized adaptations such as sharp talons for catching prey, long beaks for accessing food sources, and strong bills for cracking open seeds and nuts. Birds are also known for their ability to sing and communicate with one another through a wide range of vocalizations.]
 
 Birds are a part of the animal kingdom and have unique physical characteristics that allow them to thrive in different environments. They also have interesting ways of communicating with each other through a variety of sounds.
+
 Talk to me>
 
 Just as in a human, lots of things bubble up from the subconscious of

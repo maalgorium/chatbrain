@@ -20,7 +20,11 @@ helicopters, balloons, drones, and insects.
 Talk to me> How many species of flying animals are there?
 
 Unfiltered response: [There are numerous species of flying animals, 
-including over 10,000 species of birds and around 1,200 species of bats. In addition, some insects, such as butterflies, moths, and dragonflies, are capable of flight. Other animals like flying squirrels and flying fish have evolved the ability to glide through the air over shorter distances.]
+including over 10,000 species of birds and around 1,200 species of 
+bats. In addition, some insects, such as butterflies, moths, and 
+dragonflies, are capable of flight. Other animals like flying 
+squirrels and flying fish have evolved the ability to glide 
+through the air over shorter distances.]
 
 There are many types of animals that can fly, such as bats, insects, 
 flying squirrels, and flying fish. Some of these animals have even 

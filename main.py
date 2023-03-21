@@ -2,9 +2,9 @@ import logging
 
 from brain import MonitoredChatClient, Monitor
 
-# logging.basicConfig(level=logging.DEBUG)
-# logging.getLogger("openai").setLevel(logging.INFO)
-# logging.getLogger("urllib3").setLevel(logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("openai").setLevel(logging.INFO)
+logging.getLogger("urllib3").setLevel(logging.INFO)
 
 
 def set_up_monitors(client: MonitoredChatClient):

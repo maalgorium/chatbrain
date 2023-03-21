@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import Optional, List
 import logging
 
+from fuzzywuzzy import fuzz
+
 from client import ChatClient
 
 logger = logging.getLogger(__name__)
@@ -41,6 +43,7 @@ class Memory:
         print("saving memories...")
         message_list = '\n'.join([x['content'] for x in messages if x['role'] == 'user'])
         if len(message_list) == 0:
+            logger.debug("Nothing to save.")
             return
         response = self.client.get_chat_response(
             f"""Please summarize the following text into a list of facts beneath a 
@@ -50,9 +53,11 @@ class Memory:
             logger.error("Unable to save memory. Will be saved to error.mem")
             subject = "error.mem"
         full_path = self._memory_location.joinpath(subject)
-        if not full_path.exists():
-            full_path.write_text(response)
-            print(f"Will remember {subject}")
+        if full_path.exists():
+            response = "\n" + response
+        with open(full_path, mode='a') as f:
+            f.write(response)
+        print(f"Will remember {subject}")
 
     def find(self, memory: str) -> Optional[str]:
         logger.debug("Looking for memory")
@@ -61,7 +66,7 @@ class Memory:
         response = self.client.get_chat_response(
             f"""Which of the following subjects sounds like it contains information relevant to 
             the following message?  If any do, reply with the subject text and only the subject text.
-            If none do, reply NONE and only NONE. Do not prefix the subject text with anything. Do no
+            If none do, reply NONE and only NONE. Do not prefix the subject text with anything. Do not
             append any punctuation:
             Subjects:
             {mem_list}:
@@ -70,7 +75,11 @@ class Memory:
         if response.startswith("NONE"):
             logger.debug("No relevant memories found")
             return None
-        possible_path = self._memory_location.joinpath(response)
+        possible_path = response
+        for m in self.list_memories():
+            if fuzz.partial_ratio(response, m) > 90:
+                possible_path = self._memory_location.joinpath(m)
+                break
         logger.debug(f"Possible match: {possible_path}")
         if possible_path.exists():
             logger.debug(f"[Found possibly relevant memory '{response}']")

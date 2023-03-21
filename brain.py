@@ -2,13 +2,13 @@ from __future__ import annotations
 from typing import List, Literal, Tuple, Dict
 import os
 import openai
-
 import logging
+
+from client import ChatClient
+from memory import Memory
 
 logger = logging.getLogger(__name__)
 
-# Field = Literal["role", "content"]  # Maybe not.  Object?
-# Role = Literal["system", "user", "assistant"]
 API_KEY = os.getenv("OPENAI_API_KEY")
 
 
@@ -21,19 +21,6 @@ def _get_unfiltered_response(message) -> str:
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": message}])
     return response['choices'][0]['message']['content'].strip()
-
-
-class ChatClient:
-    def __init__(self, prefix: str = None):
-        self.prefix = prefix
-        self.messages = [{"role": "system", "content": "You are a helpful assistant."}]
-
-    def get_chat_response(self, message: str) -> str:
-        self.messages.append({"role": "user", "content": message})
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", 
-            messages=self.messages)
-        return response['choices'][0]['message']['content']
 
 
 class Monitor(ChatClient):
@@ -55,7 +42,7 @@ class Monitor(ChatClient):
     def evaluate_response(self, response: str) -> str:
         if not self.topics:
             return "OK"
-        print(f"Unfiltered response: [{response}]")
+        logger.debug(f"Unfiltered response: [{response}]")
         query = self._build_query(response)
         logger.debug(f"Checking rules: {query}")
         evaluation = _get_unfiltered_response(query)
@@ -66,6 +53,7 @@ class Monitor(ChatClient):
 class MonitoredChatClient(ChatClient):
     def __init__(self, prefix: str = None):
         super().__init__(prefix)
+        self.memory = Memory()
         self.monitors: List[Monitor] = []
             
     def add_monitor(self, brain: Monitor):
@@ -73,7 +61,21 @@ class MonitoredChatClient(ChatClient):
 
     def get_monitored_response(self, message: str):
         response = self.get_chat_response(message)
+        remember = self.memory.already_remember(response)
+        logger.debug(f"Remember? {remember}")
+        if not remember:
+            logger.debug("Can't remember: will try to look up memory")
+            mem_text = self.memory.find(message)
+            logger.debug(f"Found memory text: {mem_text}")
+            if mem_text:
+                self.get_chat_response(f"Remember this: {mem_text}.")
+                # Now try again.
+                response = self.get_chat_response(message)
+
         for monitor in self.monitors:
             response = monitor.evaluate_response(response)
         self.messages.append({"role": "assistant", "content": response})
         return response
+
+    def save_memories(self):
+        self.memory.save(self.messages)

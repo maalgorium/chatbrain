@@ -1,10 +1,14 @@
+import argparse
 import logging
+import sys
+
+import openai
 
 from brain import MonitoredChatClient, Monitor
 
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("openai").setLevel(logging.INFO)
-logging.getLogger("urllib3").setLevel(logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
+# logging.getLogger("openai").setLevel(logging.INFO)
+# logging.getLogger("urllib3").setLevel(logging.INFO)
 
 
 def set_up_monitors(client: MonitoredChatClient):
@@ -30,4 +34,10 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-k', '--key',
+                        help='Your Open AI API key. Will override environment variable OPENAI_API_KEY.', required=False)
+    args = parser.parse_args()
+    if args.key:
+        openai.api_key = args.key
     main()

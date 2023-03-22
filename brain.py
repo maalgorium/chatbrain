@@ -61,10 +61,10 @@ class MonitoredChatClient(ChatClient):
 
     def get_monitored_response(self, message: str):
         response = self.get_chat_response(message)
-        remember = self.memory.already_remember(response)
-        logger.debug(f"Remember? {remember}")
-        if not remember:
-            logger.debug("Can't remember: will try to look up memory")
+        need_mem = self.memory.need_memory(response)
+        logger.debug(f"Need memory? {need_mem}")
+        if need_mem:
+            logger.debug("Will try to look up memory")
             mem_text = self.memory.find(message)
             logger.debug(f"Found memory text: {mem_text}")
             if mem_text:

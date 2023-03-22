@@ -1,5 +1,6 @@
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Tuple
 import logging
 
 from fuzzywuzzy import fuzz
@@ -9,13 +10,20 @@ from client import ChatClient
 logger = logging.getLogger(__name__)
 
 
-def _get_subject(response: str) -> Optional[str]:
-    lines = response.split('\n')
-    for l in lines:
-        if l.startswith("SUBJECT:"):
-            return l.replace("SUBJECT:", "").strip()
+@dataclass
+class Subject:
+    header: str
+    body: str
 
-    return None
+
+def _get_subjects(response: str) -> List[Subject]:
+    raw_subjects = [line.strip() for line in response.split("SUBJECT:") if line.strip() != '']
+    subjects = []
+    for subject in raw_subjects:
+        lines = subject.split('\n')
+        subjects.append(Subject(lines[0], subject))
+
+    return subjects
 
 
 class Memory:
@@ -24,12 +32,15 @@ class Memory:
         self._memory_location: Path = Path('.memory')
         if not self._memory_location.exists():
             self._memory_location.mkdir()
+        self.current_memories: List[str] = self.list_memories()
+        self.loaded_memories: List[str] = []
 
-    def already_remember(self, message: str) -> bool:
-        logger.debug("Do you already remember this?")
+    def need_memory(self, message: str) -> bool:
         response = self.client.get_chat_response(
-            f"""Does it sound like the person talking in this message has all possible information 
-            about the topic in question? If yes, say YES and only YES, otherwise say, NO and only NO:\n{message}""")
+            f"""Does this sound like someone who was asked a question to which they did not know the answer, 
+            or did they say something like, "I don't have the ability to remember":
+            "{message}"
+             If yes, say YES and only YES, otherwise say, NO and only NO""")
         return response.startswith("YES")
 
     def list_memories(self) -> List[str]:
@@ -37,7 +48,9 @@ class Memory:
 
     def load_memory(self, memory_name: str) -> str:
         p = self._memory_location.joinpath(memory_name)
-        return p.read_text()
+        text = p.read_text()
+        self.loaded_memories.append(memory_name)
+        return text
 
     def save(self, messages):
         print("saving memories...")
@@ -48,20 +61,24 @@ class Memory:
         response = self.client.get_chat_response(
             f"""Please summarize the following text into a list of facts beneath a 
         subject heading. Preface the subject heading with SUBJECT:\n{message_list}""")
-        subject = _get_subject(response)
-        if subject is None:
-            logger.error("Unable to save memory. Will be saved to error.mem")
-            subject = "error.mem"
-        full_path = self._memory_location.joinpath(subject)
+        subjects: List[Subject] = _get_subjects(response)
+        for subject in subjects:
+            if subject.header is None:
+                logger.error("Unable to save memory. Will be saved to error.mem")
+                subject.header = "error.mem"
+            self._save_subject(subject)
+
+    def _save_subject(self, subject: Subject):
+        full_path = self._memory_location.joinpath(subject.header)
         if full_path.exists():
-            response = "\n" + response
+            subject.body = "\n" + subject.body
         with open(full_path, mode='a') as f:
-            f.write(response)
-        print(f"Will remember {subject}")
+            f.write(subject.body)
+        print(f"Will remember {subject.header}")
 
     def find(self, memory: str) -> Optional[str]:
         logger.debug("Looking for memory")
-        mem_list = '\n'.join(self.list_memories())
+        mem_list = '\n'.join(self.current_memories)
         logger.debug(f"Possible memories:\n{mem_list}")
         response = self.client.get_chat_response(
             f"""Which of the following subjects sounds like it contains information relevant to 
@@ -75,14 +92,18 @@ class Memory:
         if response.startswith("NONE"):
             logger.debug("No relevant memories found")
             return None
-        possible_path = response
+        file_name = response
+        if response in self.loaded_memories:
+            logger.debug("Relevant memory already loaded")
+            return None
         for m in self.list_memories():
             if fuzz.partial_ratio(response, m) > 90:
-                possible_path = self._memory_location.joinpath(m)
+                file_name = m
                 break
-        logger.debug(f"Possible match: {possible_path}")
-        if possible_path.exists():
+        logger.debug(f"Possible match: {file_name}")
+        f = self._memory_location.joinpath(file_name)
+        if f.exists():
             logger.debug(f"[Found possibly relevant memory '{response}']")
-            return possible_path.read_text()
+            return f.read_text()
         logger.debug("Something found, but file name is a problem")
         return None
